@@ -17,8 +17,8 @@ class SearchStudentIdPage extends StatefulWidget {
 class SearchStudentIdPageState extends State<SearchStudentIdPage> {
   AppLocalizations app;
 
-  final TextEditingController _name = TextEditingController();
-  final TextEditingController _id = TextEditingController();
+  final TextEditingController _name = TextEditingController(text:'房志剛');
+  final TextEditingController _id = TextEditingController(text:'M122689382');
   var isAutoFill = true;
 
   FocusNode nameFocusNode;
@@ -203,7 +203,10 @@ class SearchStudentIdPageState extends State<SearchStudentIdPage> {
     if (_name.text.isEmpty || _id.text.isEmpty) {
       ApUtils.showToast(context, app.doNotEmpty);
     } else {
-      String result = await Helper.instance.getUsername(_name.text, _id.text);
+      String result = await Helper.instance.getUsername(
+        name: _name.text,
+        id: _id.text,
+      );
       List<String> list = result.split('--');
       if (list.length == 2 && isAutoFill) {
         Navigator.pop(context, list[1]);

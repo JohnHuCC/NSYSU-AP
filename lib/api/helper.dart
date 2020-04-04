@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:ap_common/callback/general_callback.dart';
 import 'package:ap_common/models/course_data.dart';
@@ -730,27 +731,43 @@ class Helper {
     return null;
   }
 
-  Future<String> getUsername(String name, String id) async {
+  Future<String> getUsername({
+    @required String name,
+    @required String id,
+    GeneralCallback callback,
+  }) async {
     var url = 'http://$selcrsUrl/newstu/stu_new.asp?action=16';
-    var encoded = Utils.uriEncodeBig5(name);
-    var response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {
-        'CNAME': encoded,
-        'T_CID': id,
-        'B1': '%BDT%A9w%B0e%A5X',
-      },
-    );
-    String text = big5.decode(response.bodyBytes);
-    var document = parse(text, encoding: 'BIG-5');
-    var elements = document.getElementsByTagName('b');
-    if (elements.length > 0)
-      return elements[0].text;
-    else
-      return '';
+    try {
+      var encoded = Utils.uriEncodeBig5(name);
+      var response = await Dio().post(
+        url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          contentType: Headers.formUrlEncodedContentType,
+        ),
+        data: {
+          'CNAME': encoded,
+          'T_CID': id,
+          'B1': '%BDT%A9w%B0e%A5X',
+        },
+      );
+      String text = big5.decode(response.data);
+      var document = parse(text, encoding: 'BIG-5');
+      var elements = document.getElementsByTagName('b');
+      if (elements.length > 0)
+        return elements[0].text;
+      else
+        return '';
+    } on DioError catch (e) {
+      if (callback != null)
+        callback.onFailure(e);
+      else
+        throw e;
+    } on Exception catch (e) {
+      callback?.onError(GeneralResponse.unknownError());
+      throw e;
+    }
+    return null;
   }
 
   Future<int> tfLogin(String username, String password) async {
